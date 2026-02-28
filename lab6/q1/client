@@ -1,0 +1,39 @@
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char received_data[100];
+    int i, count = 0, choice;
+
+    printf("---- RECEIVER SIDE ----\n");
+
+    printf("Enter received data: ");
+    scanf("%s", received_data);
+
+    printf("Enter Parity Type Used:\n");
+    printf("1. Even Parity\n");
+    printf("2. Odd Parity\n");
+    printf("Enter choice: ");
+    scanf("%d", &choice);
+
+    // Count number of 1s including parity bit
+    for(i = 0; i < strlen(received_data); i++) {
+        if(received_data[i] == '1')
+            count++;
+    }
+
+    // Check parity
+    if(choice == 1) { // Even parity
+        if(count % 2 == 0)
+            printf("Data received correctly (No Error).\n");
+        else
+            printf("Data is corrupted (Error detected).\n");
+    } else { // Odd parity
+        if(count % 2 != 0)
+            printf("Data received correctly (No Error).\n");
+        else
+            printf("Data is corrupted (Error detected).\n");
+    }
+
+    return 0;
+}
