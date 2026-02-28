@@ -1,0 +1,44 @@
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char data[100];
+    int i, count = 0, choice;
+    int parity_bit;
+
+    printf("---- SENDER SIDE ----\n");
+
+    printf("Enter binary data: ");
+    scanf("%s", data);
+
+    printf("Choose Parity Type:\n");
+    printf("1. Even Parity\n");
+    printf("2. Odd Parity\n");
+    printf("Enter choice: ");
+    scanf("%d", &choice);
+
+    // Count number of 1s
+    for(i = 0; i < strlen(data); i++) {
+        if(data[i] == '1')
+            count++;
+    }
+
+    // Generate parity bit
+    if(choice == 1) { // Even parity
+        parity_bit = (count % 2 == 0) ? 0 : 1;
+    } else { // Odd parity
+        parity_bit = (count % 2 == 0) ? 1 : 0;
+    }
+
+    // Append parity bit
+    int len = strlen(data);
+    data[len] = parity_bit + '0';
+    data[len + 1] = '\0';
+
+    printf("Parity bit generated: %d\n", parity_bit);
+    printf("Transmitted data: %s\n", data);
+
+    printf("\nSend this transmitted data to receiver.\n");
+
+    return 0;
+}
