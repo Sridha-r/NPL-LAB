@@ -1,0 +1,36 @@
+DHCP 
+ip dhcp excluded-address 192.168.1.1 192.168.1.10
+
+ip dhcp pool LAN
+network 192.168.1.0 255.255.255.0
+default-router 192.168.1.1
+dns-server 8.8.8.8
+
+
+  RIP PROTOCOL
+router rip
+version 2
+network 192.168.1.0
+network 10.0.0.0
+
+  show ip route
+R 192.168.2.0 via 10.0.0.2
+
+  OSPF 
+
+router ospf 1
+network 192.168.1.0 0.0.0.255 area 0
+network 10.0.0.0 0.255.255.255 area 0
+  show ip route
+O 192.168.2.0 via 10.0.0.2
+
+
+
+  NAT PRTOCOL
+interface fa0/0
+ip nat inside
+
+interface s0/0/0
+ip nat outside
+
+ip nat inside source static 10.0.0.5 2.0.0.5
