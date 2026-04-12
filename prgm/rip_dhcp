@@ -1,0 +1,160 @@
+Topology Structure
+PC0 PC1 PC2 PC3 ---- Switch0 ---- Router0 ---- Router1 ---- Switch1 ---- PC4 PC5 PC6 PC7
+            (DHCP Network)                     (Static Network)
+
+Router0 → DHCP server
+Routers communicate using RIP
+
+IP Address Plan
+Network 1 (DHCP Network)
+Device	IP
+Router0 Fa0/0	192.168.1.1
+Network	192.168.1.0/24
+PCs	Automatic from DHCP
+Network 2 (Static IP Network)
+Device	IP
+Router1 Fa0/0	192.168.2.1
+PC4	192.168.2.2
+PC5	192.168.2.3
+PC6	192.168.2.4
+PC7	192.168.2.5
+Router to Router Network
+Device	IP
+Router0 S0/0/0	10.0.0.1
+Router1 S0/0/0	10.0.0.2
+Cable Connections
+PC ↔ Switch
+
+Straight-through cable
+
+Switch ↔ Router
+
+Straight-through cable
+
+Router ↔ Router
+
+Serial DCE cable
+
+Router Configurations
+Router0 Configuration (DHCP + RIP)
+enable
+configure terminal
+
+hostname R0
+
+interface fa0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+exit
+
+interface s0/0/0
+ip address 10.0.0.1 255.255.255.252
+clock rate 64000
+no shutdown
+exit
+
+! DHCP Configuration
+ip dhcp excluded-address 192.168.1.1 192.168.1.10
+
+ip dhcp pool LAN1
+network 192.168.1.0 255.255.255.0
+default-router 192.168.1.1
+dns-server 8.8.8.8
+exit
+
+! RIP routing
+router rip
+version 2
+network 192.168.1.0
+network 10.0.0.0
+
+end
+write memory
+
+
+Router1 Configuration (Static IP + RIP)
+enable
+configure terminal
+
+hostname R1
+
+interface fa0/0
+ip address 192.168.2.1 255.255.255.0
+no shutdown
+exit
+
+interface s0/0/0
+ip address 10.0.0.2 255.255.255.252
+no shutdown
+exit
+
+router rip
+version 2
+network 192.168.2.0
+network 10.0.0.0
+
+end
+write memory
+PC Configuration
+DHCP Network PCs (PC0–PC3)
+
+Desktop → IP Configuration → DHCP
+
+Expected:
+
+IP Address: 192.168.1.x
+Subnet Mask: 255.255.255.0
+Gateway: 192.168.1.1
+DNS: 8.8.8.8
+
+Example:
+
+PC0 → 192.168.1.11
+PC1 → 192.168.1.12
+PC2 → 192.168.1.13
+PC3 → 192.168.1.14
+Static Network PCs (PC4–PC7)
+
+Desktop → IP Configuration → Static
+
+PC	IP	Gateway
+PC4	192.168.2.2	192.168.2.1
+PC5	192.168.2.3	192.168.2.1
+PC6	192.168.2.4	192.168.2.1
+PC7	192.168.2.5	192.168.2.1
+
+Subnet mask: 255.255.255.0
+
+Verification Commands
+Check DHCP Assigned IP
+R0# show ip dhcp binding
+
+Output:
+
+IP address      Client-ID
+192.168.1.11
+192.168.1.12
+192.168.1.13
+192.168.1.14
+Check RIP Routes
+R0# show ip route
+
+Output:
+
+R 192.168.2.0 [120/1] via 10.0.0.2
+Connectivity Test
+
+From PC0:
+
+ping 192.168.2.2
+
+Output:
+
+Pinging 192.168.2.2 with 32 bytes of data:
+
+Reply from 192.168.2.2: bytes=32 time<10ms TTL=125
+Reply from 192.168.2.2: bytes=32 time<10ms TTL=125
+Reply from 192.168.2.2: bytes=32 time<10ms TTL=125
+Reply from 192.168.2.2: bytes=32 time<10ms TTL=125
+
+Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)
