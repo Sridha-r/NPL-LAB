@@ -1,0 +1,185 @@
+Topology Structure
+4 PCs ---- Switch ---- R1 ------- R2 ------- R3 ---- Switch ---- 10 PCs
+                         |
+                      Switch
+                      4 PCs
+
+R1 = Left router
+R2 = Center router
+R3 = Right router (NAT configured)
+-------------------------------------------------------------------------------------
+IP Address Plan
+Left Network (4 PCs)
+Device	IP
+R1 Fa0/0	192.168.1.1
+PCs	192.168.1.2 – 192.168.1.5
+
+Center Network (4 PCs)
+Device	IP
+R2 Fa0/0	192.168.2.1
+PCs	192.168.2.2 – 192.168.2.5
+
+Right Network (10 PCs → NAT network)
+Device	IP
+R3 Fa0/0	192.168.3.1
+PCs	192.168.3.2 – 192.168.3.11
+----------------------------------------------------------------------------------
+Router Interconnections
+Link	IP
+R1 ↔ R2	10.0.0.1 / 10.0.0.2
+R2 ↔ R3	20.0.0.1 / 20.0.0.2
+Cable Connections
+PC ↔ Switch
+
+Straight-through cable
+
+Switch ↔ Router
+
+Straight-through cable
+
+Router ↔ Router
+
+Serial DCE cable
+----------------------------------------------------------------------------------------------------
+Router Configurations
+Router R1 (Left router)
+enable
+configure terminal
+
+hostname R1
+
+interface fa0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+exit
+
+interface s0/0/0
+ip address 10.0.0.1 255.255.255.252
+clock rate 64000
+no shutdown
+exit
+
+router ospf 1
+network 192.168.1.0 0.0.0.255 area 0
+network 10.0.0.0 0.0.0.3 area 0
+
+end
+write memory
+Router R2 (Center router)
+enable
+configure terminal
+
+hostname R2
+
+interface fa0/0
+ip address 192.168.2.1 255.255.255.0
+no shutdown
+exit
+
+interface s0/0/0
+ip address 10.0.0.2 255.255.255.252
+no shutdown
+exit
+
+interface s0/0/1
+ip address 20.0.0.1 255.255.255.252
+clock rate 64000
+no shutdown
+exit
+
+router ospf 1
+network 192.168.2.0 0.0.0.255 area 0
+network 10.0.0.0 0.0.0.3 area 0
+network 20.0.0.0 0.0.0.3 area 0
+
+end
+write memory
+Router R3 (Right router with NAT)
+enable
+configure terminal
+
+hostname R3
+
+interface fa0/0
+ip address 192.168.3.1 255.255.255.0
+ip nat inside
+no shutdown
+exit
+
+interface s0/0/0
+ip address 20.0.0.2 255.255.255.252
+ip nat outside
+no shutdown
+exit
+
+router ospf 1
+network 192.168.3.0 0.0.0.255 area 0
+network 20.0.0.0 0.0.0.3 area 0
+
+! NAT configuration
+access-list 1 permit 192.168.3.0 0.0.0.255
+
+ip nat inside source list 1 interface s0/0/0 overload
+
+end
+write memory
+---------------------------------------------------------------------------------------------------------------
+PC Configuration
+Left Network PCs
+PC	IP	Gateway
+PC0	192.168.1.2	192.168.1.1
+PC1	192.168.1.3	192.168.1.1
+PC2	192.168.1.4	192.168.1.1
+PC3	192.168.1.5	192.168.1.1
+
+Center Network PCs
+PC	IP	Gateway
+PC4	192.168.2.2	192.168.2.1
+PC5	192.168.2.3	192.168.2.1
+PC6	192.168.2.4	192.168.2.1
+PC7	192.168.2.5	192.168.2.1
+
+Right Network PCs (10 PCs)
+PC	IP	Gateway
+PC8	192.168.3.2	192.168.3.1
+PC9	192.168.3.3	192.168.3.1
+PC10	192.168.3.4	192.168.3.1
+PC11	192.168.3.5	192.168.3.1
+PC12	192.168.3.6	192.168.3.1
+PC13	192.168.3.7	192.168.3.1
+PC14	192.168.3.8	192.168.3.1
+PC15	192.168.3.9	192.168.3.1
+PC16	192.168.3.10	192.168.3.1
+PC17	192.168.3.11	192.168.3.1
+---------------------------------------------------------------------------------------------------
+Verification Commands
+Check OSPF Routes
+R1# show ip route
+
+Output:
+
+O 192.168.2.0 via 10.0.0.2
+O 192.168.3.0 via 10.0.0.2
+Check NAT Translation
+R3# show ip nat translations
+
+Example:
+
+Pro Inside global      Inside local
+20.0.0.2              192.168.3.2
+20.0.0.2              192.168.3.3
+---------------------------------------------------------------------------------------------------------------
+Connectivity Test
+
+From PC0:
+
+ping 192.168.3.2
+
+Output:
+
+Reply from 192.168.3.2: bytes=32 time<10ms TTL=125
+Reply from 192.168.3.2: bytes=32 time<10ms TTL=125
+Reply from 192.168.3.2: bytes=32 time<10ms TTL=125
+Reply from 192.168.3.2: bytes=32 time<10ms TTL=125
+
+Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)
